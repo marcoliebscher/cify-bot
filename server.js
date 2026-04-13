@@ -3,27 +3,35 @@ const app = express();
 
 app.use(express.text({ type: "*/*" }));
 
-let gespeicherteDaten = [];
+console.log("🔥 STABLE VERSION AKTIV");
 
-console.log("🔥 FINAL VERSION AKTIV");
+let gespeicherteDaten = [];
 
 app.post("/webhook", (req, res) => {
   console.log("📩 Webhook hit");
 
   try {
-    let body = req.body;
-
-    // Falls string → parse
-    if (typeof body === "string") {
-      body = JSON.parse(body);
+    if (!req.body) {
+      console.log("⚠️ Kein Body erhalten");
+      return res.sendStatus(200);
     }
 
-    console.log("RAW BODY:", body);
+    let body = req.body;
 
-    // 🔥 einfach ALLES speichern
+    if (typeof body === "string") {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        console.log("⚠️ Kein gültiges JSON:", body);
+        return res.sendStatus(200);
+      }
+    }
+
+    console.log("✅ BODY OK");
+
     gespeicherteDaten.push(body);
 
-    console.log("📦 Gesamt Einträge:", gespeicherteDaten.length);
+    console.log("📦 Gesamt:", gespeicherteDaten.length);
 
   } catch (err) {
     console.log("❌ Fehler:", err.message);
@@ -36,8 +44,16 @@ app.get("/daten", (req, res) => {
   res.json(gespeicherteDaten);
 });
 
+app.get("/analysis", (req, res) => {
+  if (gespeicherteDaten.length === 0) {
+    return res.json({ message: "Keine Daten vorhanden" });
+  }
+
+  res.json(gespeicherteDaten);
+});
+
 app.get("/", (req, res) => {
-  res.send("🔥 läuft");
+  res.send("🔥 SERVER STABIL");
 });
 
 app.listen(process.env.PORT || 3000, () => {
