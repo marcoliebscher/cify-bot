@@ -6,10 +6,15 @@ const app = express();
 
 let SESSION_TOKEN = null;
 
+// 🔐 RICHTIGER HASH (UTF-8!)
 function hashPassword(password) {
-  return crypto.createHash("sha256").update(password).digest("hex");
+  return crypto
+    .createHash("sha256")
+    .update(password, "utf8")
+    .digest("hex");
 }
 
+// 🔑 LOGIN
 async function login() {
   const EMAIL = process.env.EMAIL;
   const PASSWORD = process.env.PASSWORD;
@@ -19,6 +24,8 @@ async function login() {
   }
 
   const hashedPassword = hashPassword(PASSWORD);
+
+  console.log("🔐 HASH:", hashedPassword); // Debug
 
   const response = await axios.post(
     "https://hive2.tracify.ai/v1/tracify/api/account/login",
@@ -32,6 +39,7 @@ async function login() {
   console.log("✅ Token geholt");
 }
 
+// 📊 ENDPOINT
 app.get("/kampagnen", async (req, res) => {
   try {
     if (!SESSION_TOKEN) {
