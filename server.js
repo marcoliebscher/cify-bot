@@ -1,0 +1,59 @@
+const express = require("express");
+const axios = require("axios");
+const crypto = require("crypto");
+
+const app = express();
+
+const EMAIL = process.env.EMAIL;
+const PASSWORD = process.env.PASSWORD;
+const SITE_ID = process.env.SITE_ID;
+const PRESET_ID = process.env.PRESET_ID;
+
+let SESSION_TOKEN = null;
+
+function hashPassword(password) {
+  return crypto.createHash("sha256").update(password).digest("hex");
+}
+
+async function login() {
+  const response = await axios.post(
+    "https://hive2.tracify.ai/v1/tracify/api/account/login",
+    {
+      email: EMAIL,
+      password: hashPassword(PASSWORD),
+    }
+  );
+
+  SESSION_TOKEN = response.data.result.session;
+}
+
+app.get("/kampagnen", async (req, res) => {
+  try {
+    if (!SESSION_TOKEN) {
+      await login();
+    }
+
+    const { start, end } = req.query;
+
+    const response = await axios.get(
+      "https://tracify-api.tracify.ai/analytics/api/v1/kpis/channels/",
+      {
+        headers: {
+          Authorization: SESSION_TOKEN,
+        },
+        params: {
+          site_id: SITE_ID,
+          preset_id: PRESET_ID,
+          start_date: start,
+          end_date: end,
+        },
+      }
+    );
+
+    res.json(response.data);
+  } catch (err) {
+    res.send("Error");
+  }
+});
+
+app.listen(3000);
