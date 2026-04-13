@@ -1,20 +1,11 @@
 const express = require("express");
 const axios = require("axios");
-const crypto = require("crypto");
 
 const app = express();
 
 let SESSION_TOKEN = null;
 
-// 🔐 Passwort hashen
-function hashPassword(password) {
-  if (!password) {
-    throw new Error("PASSWORD fehlt!");
-  }
-  return crypto.createHash("sha256").update(password).digest("hex");
-}
-
-// 🔑 Login
+// 🔑 Login (OHNE HASH – funktioniert meist direkt)
 async function login() {
   const EMAIL = process.env.EMAIL;
   const PASSWORD = process.env.PASSWORD;
@@ -27,7 +18,7 @@ async function login() {
     "https://hive2.tracify.ai/v1/tracify/api/account/login",
     {
       email: EMAIL,
-      password: hashPassword(PASSWORD),
+      password: PASSWORD,
     }
   );
 
