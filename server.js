@@ -1,70 +1,23 @@
 const express = require("express");
-const axios = require("axios");
-const crypto = require("crypto");
 
 const app = express();
 
-const EMAIL = process.env.EMAIL;
-const PASSWORD = process.env.PASSWORD;
-const SITE_ID = process.env.SITE_ID;
-const PRESET_ID = process.env.PRESET_ID;
+app.use(express.json());
 
-let SESSION_TOKEN = null;
+// 🔥 Webhook Endpoint
+app.post("/webhook", (req, res) => {
+  console.log("📩 Neue Daten von Tracify:");
 
-function hashPassword(password) {
-  if (!password) {
-    throw new Error("PASSWORD ist undefined!");
-  }
+  const data = req.body;
 
-  return crypto.createHash("sha256").update(password.trim()).digest("hex");
-}
+  console.log(JSON.stringify(data, null, 2));
 
-async function login() {
-  console.log("🔐 Login wird versucht...");
-  console.log("EMAIL:", EMAIL);
-  console.log("PASSWORD Länge:", PASSWORD?.length);
-
-  const response = await axios.post(
-    "https://hive2.tracify.ai/v1/tracify/api/account/login",
-    {
-      email: EMAIL,
-      password: hashPassword(PASSWORD),
-    }
-  );
-
-  console.log("✅ Login erfolgreich");
-
-  SESSION_TOKEN = response.data.result.session;
-}
-
-app.get("/kampagnen", async (req, res) => {
-  try {
-    if (!SESSION_TOKEN) {
-      await login();
-    }
-
-    const response = await axios.get(
-      "https://tracify-api.tracify.ai/analytics/api/v1/kpis/channels/",
-      {
-        headers: {
-          Authorization: SESSION_TOKEN,
-        },
-        params: {
-          site_id: SITE_ID,
-          preset_id: PRESET_ID,
-          start_date: "2026-04-01",
-          end_date: "2026-04-13",
-        },
-      }
-    );
-
-    res.json(response.data);
-  } catch (err) {
-    console.error("❌ ERROR:", err.response?.data || err.message);
-    res.json(err.response?.data || { error: err.message });
-  }
+  // optional speichern (später wichtig für Claude)
+  
+  res.send("ok");
 });
 
+// Test Route
 app.get("/", (req, res) => {
   res.send("Server läuft 🚀");
 });
