@@ -1,23 +1,29 @@
 const express = require("express");
 
 const app = express();
-
 app.use(express.json());
 
-// 🔥 Webhook Endpoint
+// 🔥 Speicher (einfach im RAM)
+let gespeicherteDaten = [];
+
+// Webhook
 app.post("/webhook", (req, res) => {
-  console.log("📩 Neue Daten von Tracify:");
+  console.log("📩 Neue Daten von Tracify");
 
   const data = req.body;
 
-  console.log(JSON.stringify(data, null, 2));
+  gespeicherteDaten.push(...data.results);
 
-  // optional speichern (später wichtig für Claude)
-  
+  console.log("💾 Daten gespeichert:", gespeicherteDaten.length);
+
   res.send("ok");
 });
 
-// Test Route
+// 👉 Daten abrufen (wichtig für später)
+app.get("/daten", (req, res) => {
+  res.json(gespeicherteDaten);
+});
+
 app.get("/", (req, res) => {
   res.send("Server läuft 🚀");
 });
