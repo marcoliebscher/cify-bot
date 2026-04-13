@@ -1,11 +1,15 @@
 const express = require("express");
 const axios = require("axios");
+const crypto = require("crypto");
 
 const app = express();
 
 let SESSION_TOKEN = null;
 
-// 🔑 Login (OHNE HASH – funktioniert meist direkt)
+function hashPassword(password) {
+  return crypto.createHash("sha256").update(password).digest("hex");
+}
+
 async function login() {
   const EMAIL = process.env.EMAIL;
   const PASSWORD = process.env.PASSWORD;
@@ -14,11 +18,13 @@ async function login() {
     throw new Error("ENV Variablen fehlen!");
   }
 
+  const hashedPassword = hashPassword(PASSWORD);
+
   const response = await axios.post(
     "https://hive2.tracify.ai/v1/tracify/api/account/login",
     {
       email: EMAIL,
-      password: PASSWORD,
+      password: hashedPassword,
     }
   );
 
@@ -26,7 +32,6 @@ async function login() {
   console.log("✅ Token geholt");
 }
 
-// 📊 Endpoint
 app.get("/kampagnen", async (req, res) => {
   try {
     if (!SESSION_TOKEN) {
