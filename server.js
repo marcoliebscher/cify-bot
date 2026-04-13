@@ -25,6 +25,7 @@ async function login() {
   );
 
   SESSION_TOKEN = response.data.result.session;
+  console.log("✅ Token geholt");
 }
 
 app.get("/kampagnen", async (req, res) => {
@@ -52,8 +53,11 @@ app.get("/kampagnen", async (req, res) => {
 
     res.json(response.data);
   } catch (err) {
-    res.send("Error");
+    console.log("❌ ERROR:", err.response?.data || err.message);
+    res.send(err.response?.data || err.message);
   }
 });
 
-app.listen(3000);
+app.listen(3000, () => {
+  console.log("🚀 Server läuft");
+});
