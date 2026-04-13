@@ -3,16 +3,17 @@ const app = express();
 
 app.use(express.text({ type: "*/*" }));
 
-console.log("🔥 STABLE VERSION AKTIV");
-
 let gespeicherteDaten = [];
 
+console.log("🔥 FIXED VERSION AKTIV");
+
+// Webhook
 app.post("/webhook", (req, res) => {
   console.log("📩 Webhook hit");
 
   try {
     if (!req.body) {
-      console.log("⚠️ Kein Body erhalten");
+      console.log("⚠️ Kein Body");
       return res.sendStatus(200);
     }
 
@@ -22,16 +23,14 @@ app.post("/webhook", (req, res) => {
       try {
         body = JSON.parse(body);
       } catch (e) {
-        console.log("⚠️ Kein gültiges JSON:", body);
+        console.log("⚠️ Kein JSON");
         return res.sendStatus(200);
       }
     }
 
-    console.log("✅ BODY OK");
-
     gespeicherteDaten.push(body);
 
-    console.log("📦 Gesamt:", gespeicherteDaten.length);
+    console.log("📦 Daten gespeichert:", gespeicherteDaten.length);
 
   } catch (err) {
     console.log("❌ Fehler:", err.message);
@@ -40,22 +39,19 @@ app.post("/webhook", (req, res) => {
   res.sendStatus(200);
 });
 
+// Debug
 app.get("/daten", (req, res) => {
   res.json(gespeicherteDaten);
 });
 
-app.get("/analysis", (req, res) => {
-  if (gespeicherteDaten.length === 0) {
-    return res.json({ message: "Keine Daten vorhanden" });
-  }
-
-  res.json(gespeicherteDaten);
-});
-
+// Root
 app.get("/", (req, res) => {
-  res.send("🔥 SERVER STABIL");
+  res.send("🔥 SERVER LÄUFT FIXED");
 });
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log("🚀 Server läuft");
+// 🚨 DAS IST DER WICHTIGE TEIL
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server läuft auf Port ${PORT}`);
 });
