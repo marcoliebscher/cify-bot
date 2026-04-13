@@ -4,50 +4,44 @@ const crypto = require("crypto");
 
 const app = express();
 
+const EMAIL = process.env.EMAIL;
+const PASSWORD = process.env.PASSWORD;
+const SITE_ID = process.env.SITE_ID;
+const PRESET_ID = process.env.PRESET_ID;
+
 let SESSION_TOKEN = null;
 
-// 🔐 RICHTIGER HASH (UTF-8!)
 function hashPassword(password) {
-  return crypto
-    .createHash("sha256")
-    .update(password, "utf8")
-    .digest("hex");
-}
-
-// 🔑 LOGIN
-async function login() {
-  const EMAIL = process.env.EMAIL;
-  const PASSWORD = process.env.PASSWORD;
-
-  if (!EMAIL || !PASSWORD) {
-    throw new Error("ENV Variablen fehlen!");
+  if (!password) {
+    throw new Error("PASSWORD ist undefined!");
   }
 
-  const hashedPassword = hashPassword(PASSWORD);
+  return crypto.createHash("sha256").update(password.trim()).digest("hex");
+}
 
-  console.log("🔐 HASH:", hashedPassword); // Debug
+async function login() {
+  console.log("🔐 Login wird versucht...");
+  console.log("EMAIL:", EMAIL);
+  console.log("PASSWORD Länge:", PASSWORD?.length);
 
   const response = await axios.post(
     "https://hive2.tracify.ai/v1/tracify/api/account/login",
     {
       email: EMAIL,
-      password: hashedPassword,
+      password: hashPassword(PASSWORD),
     }
   );
 
+  console.log("✅ Login erfolgreich");
+
   SESSION_TOKEN = response.data.result.session;
-  console.log("✅ Token geholt");
 }
 
-// 📊 ENDPOINT
 app.get("/kampagnen", async (req, res) => {
   try {
     if (!SESSION_TOKEN) {
       await login();
     }
-
-    const SITE_ID = process.env.SITE_ID;
-    const PRESET_ID = process.env.PRESET_ID;
 
     const response = await axios.get(
       "https://tracify-api.tracify.ai/analytics/api/v1/kpis/channels/",
@@ -58,17 +52,23 @@ app.get("/kampagnen", async (req, res) => {
         params: {
           site_id: SITE_ID,
           preset_id: PRESET_ID,
+          start_date: "2026-04-01",
+          end_date: "2026-04-13",
         },
       }
     );
 
     res.json(response.data);
   } catch (err) {
-    console.log("❌ ERROR:", err.response?.data || err.message);
-    res.send(err.response?.data || err.message);
+    console.error("❌ ERROR:", err.response?.data || err.message);
+    res.json(err.response?.data || { error: err.message });
   }
 });
 
+app.get("/", (req, res) => {
+  res.send("Server läuft 🚀");
+});
+
 app.listen(3000, () => {
-  console.log("🚀 Server läuft");
+  console.log("🚀 Server läuft auf Port 3000");
 });
