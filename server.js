@@ -3,28 +3,37 @@ const app = express();
 
 app.use(express.json());
 
-console.log("🔥 VERSION 2 AKTIV");
+console.log("🔥 VERSION 3 AKTIV");
 
-// Speicher für Webhook Daten
+// Speicher
 let gespeicherteDaten = [];
 
-// Webhook Endpoint (Tracify schickt hier Daten rein)
+// Webhook
 app.post("/webhook", (req, res) => {
   console.log("📩 Neue Daten von Tracify erhalten");
 
+  // DEBUG
+  console.log("BODY:", JSON.stringify(req.body).slice(0, 200));
+
   if (Array.isArray(req.body)) {
     gespeicherteDaten = gespeicherteDaten.concat(req.body);
+  } else if (Array.isArray(req.body.results)) {
+    gespeicherteDaten = gespeicherteDaten.concat(req.body.results);
+  } else {
+    console.log("⚠️ Unbekanntes Format");
   }
+
+  console.log("📊 Gespeicherte Einträge:", gespeicherteDaten.length);
 
   res.sendStatus(200);
 });
 
-// Debug: rohe Daten anzeigen
+// Daten anzeigen
 app.get("/daten", (req, res) => {
   res.json(gespeicherteDaten);
 });
 
-// 🔥 AI ANALYSIS (JETZT DEFINITIV DRIN)
+// Analyse
 app.get("/analysis", (req, res) => {
   try {
     if (gespeicherteDaten.length === 0) {
@@ -84,11 +93,11 @@ app.get("/analysis", (req, res) => {
   }
 });
 
-// Root (damit du siehst ob neuer Code läuft)
+// Root
 app.get("/", (req, res) => {
-  res.send("🔥 VERSION 2 LIVE");
+  res.send("🔥 VERSION 3 LIVE");
 });
 
-app.listen(3000, () => {
-  console.log("🚀 Server läuft auf Port 3000");
+app.listen(process.env.PORT || 3000, () => {
+  console.log("🚀 Server läuft");
 });
