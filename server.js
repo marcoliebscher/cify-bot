@@ -4,18 +4,25 @@ const crypto = require("crypto");
 
 const app = express();
 
-const EMAIL = process.env.EMAIL;
-const PASSWORD = process.env.PASSWORD;
-const SITE_ID = process.env.SITE_ID;
-const PRESET_ID = process.env.PRESET_ID;
-
 let SESSION_TOKEN = null;
 
+// 🔐 Passwort hashen
 function hashPassword(password) {
+  if (!password) {
+    throw new Error("PASSWORD fehlt!");
+  }
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
+// 🔑 Login
 async function login() {
+  const EMAIL = process.env.EMAIL;
+  const PASSWORD = process.env.PASSWORD;
+
+  if (!EMAIL || !PASSWORD) {
+    throw new Error("ENV Variablen fehlen!");
+  }
+
   const response = await axios.post(
     "https://hive2.tracify.ai/v1/tracify/api/account/login",
     {
@@ -28,13 +35,15 @@ async function login() {
   console.log("✅ Token geholt");
 }
 
+// 📊 Endpoint
 app.get("/kampagnen", async (req, res) => {
   try {
     if (!SESSION_TOKEN) {
       await login();
     }
 
-    const { start, end } = req.query;
+    const SITE_ID = process.env.SITE_ID;
+    const PRESET_ID = process.env.PRESET_ID;
 
     const response = await axios.get(
       "https://tracify-api.tracify.ai/analytics/api/v1/kpis/channels/",
@@ -45,8 +54,6 @@ app.get("/kampagnen", async (req, res) => {
         params: {
           site_id: SITE_ID,
           preset_id: PRESET_ID,
-          start_date: start,
-          end_date: end,
         },
       }
     );
